@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>벽돌깨기 학습 게임</title>
+<style>
+*{box-sizing:border-box} body{margin:0;min-height:100vh;background:linear-gradient(180deg,#eef5ff,#dce9ff);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1f2a3a;display:flex;align-items:center;justify-content:center;padding:20px}
+.app{width:min(1100px,96vw);background:#fff;border-radius:24px;box-shadow:0 18px 40px rgba(40,70,120,.14);overflow:hidden;border:1px solid #d7e3f3}
+header{background:#284d7a;color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(26px,3vw,40px)} .stats{display:flex;gap:10px;flex-wrap:wrap}.stat{background:rgba(255,255,255,.14);padding:10px 14px;border-radius:14px;font-weight:900;font-size:clamp(16px,1.4vw,20px)}
+.content{display:grid;grid-template-columns:1fr 250px;gap:18px;padding:20px}.game-panel{min-width:0}.canvas-wrap{position:relative;width:100%;aspect-ratio:4/3;background:#0e1b2b;border-radius:18px;overflow:hidden;border:4px solid #315f92}
+canvas{width:100%;height:100%;display:block;touch-action:none}.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(7,18,31,.58);color:white;text-align:center;padding:24px}.overlay.hidden{display:none}.overlay-box{background:rgba(24,52,84,.92);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:24px;width:min(520px,90%)}.overlay-box h2{margin:0 0 10px;font-size:clamp(28px,3vw,42px)}.overlay-box p{margin:8px 0 0;line-height:1.6;font-size:clamp(16px,1.5vw,21px)}
+.controls{margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}button{border:0;border-radius:12px;padding:12px 18px;font-size:17px;font-weight:900;cursor:pointer}.primary{background:#2e6fb0;color:#fff}.secondary{background:#e7eef7;color:#284d7a}.next{background:#f2b93d;color:#493400}button:disabled{opacity:.45;cursor:not-allowed}
+aside{background:#f6f9fd;border:1px solid #dce6f2;border-radius:18px;padding:18px}aside h2{margin:0 0 12px;font-size:22px;color:#284d7a}.help{display:flex;flex-direction:column;gap:12px;font-size:16px;line-height:1.5}.help-item{background:#fff;border:1px solid #e2eaf4;border-radius:12px;padding:12px}.key{display:inline-block;min-width:34px;text-align:center;padding:4px 7px;border-radius:8px;background:#eaf1f9;border:1px solid #cbd9ea;font-weight:900}.message{margin-top:14px;background:#fff7dc;color:#5c470f;border:1px solid #f0d88c;padding:12px 14px;border-radius:12px;font-weight:800;line-height:1.5}
+@media(max-width:850px){.content{grid-template-columns:1fr} aside{order:-1}}
+</style>
+</head>
+<body>
+<main class="app">
+<header><h1>🧱 벽돌깨기 게임</h1><div class="stats"><div class="stat">점수 <span id="score">0</span></div><div class="stat">생명 <span id="lives">3</span></div><div class="stat">단계 <span id="stage">1</span>/3</div></div></header>
+<section class="content">
+<div class="game-panel">
+<div class="canvas-wrap">
+<canvas id="gameCanvas" width="800" height="600" aria-label="벽돌깨기 게임 화면"></canvas>
+<div id="overlay" class="overlay"><div class="overlay-box"><h2 id="overlayTitle">게임 시작</h2><p id="overlayText">시작 버튼을 누른 뒤 스페이스 키로 공을 발사하세요.</p></div></div>
+</div>
+<div class="controls"><button id="startBtn" class="primary" type="button">시작</button><button id="nextBtn" class="next" type="button" disabled>다음 단계</button><button id="restartBtn" class="secondary" type="button">다시 하기</button></div>
+</div>
+<aside><h2>조작 방법</h2><div class="help"><div class="help-item"><span class="key">←</span> <span class="key">→</span> 키로 자를 움직입니다.</div><div class="help-item"><span class="key">Space</span> 공 발사 / 일시정지</div><div class="help-item">마우스 또는 터치로 자를 좌우로 움직일 수 있습니다.</div></div><div id="message" class="message">점수 0, 생명 3, 단계 1로 시작합니다.</div></aside>
+</section>
+</main>
+<script>
+(() => {
+const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d');
+const scoreEl=document.getElementById('score'),livesEl=document.getElementById('lives'),stageEl=document.getElementById('stage'),messageEl=document.getElementById('message');
+const overlay=document.getElementById('overlay'),overlayTitle=document.getElementById('overlayTitle'),overlayText=document.getElementById('overlayText');
+const startBtn=document.getElementById('startBtn'),nextBtn=document.getElementById('nextBtn'),restartBtn=document.getElementById('restartBtn');
+const W=canvas.width,H=canvas.height;
+let score=0,lives=3,stage=1,running=false,launched=false,paused=false,gameOver=false,stageCleared=false,animationId=null,leftPressed=false,rightPressed=false,bricks=[];
+const maxStage=3;
+const paddle={w:130,h:18,x:W/2-65,y:H-42,speed:9};
+const ball={x:W/2,y:paddle.y-12,r:9,dx:0,dy:0,speed:5};
+
+function updateStats(){scoreEl.textContent=score;livesEl.textContent=lives;stageEl.textContent=stage}
+function showOverlay(t,txt){overlayTitle.textContent=t;overlayText.textContent=txt;overlay.classList.remove('hidden')}
+function hideOverlay(){overlay.classList.add('hidden')}
+function setMessage(t){messageEl.textContent=t}
+function createBricks(){
+  bricks=[]; const rows=4+stage,cols=8,gap=10,marginX=50,top=70,bw=(W-marginX*2-gap*(cols-1))/cols,bh=26;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)bricks.push({x:marginX+c*(bw+gap),y:top+r*(bh+gap),w:bw,h:bh,alive:true,row:r});
+}
+function resetBall(){launched=false;paused=false;ball.speed=5+(stage-1)*1.2;ball.dx=0;ball.dy=0;ball.x=paddle.x+paddle.w/2;ball.y=paddle.y-ball.r-2}
+function resetPaddle(){paddle.x=W/2-paddle.w/2}
+function prepareStage(){createBricks();resetPaddle();resetBall();stageCleared=false;nextBtn.disabled=true;setMessage(`단계 ${stage} 준비 완료. 스페이스를 누르면 공이 발사됩니다.`)}
+function ensureLoop(){if(animationId===null)loop()}
+function startGame(){score=0;lives=3;stage=1;running=true;gameOver=false;prepareStage();updateStats();hideOverlay();startBtn.disabled=true;setMessage('게임이 시작되었습니다. 스페이스를 눌러 공을 발사하세요.');ensureLoop()}
+function restartGame(){score=0;lives=3;stage=1;running=true;gameOver=false;prepareStage();updateStats();hideOverlay();startBtn.disabled=true;ensureLoop()}
+function nextStage(){if(!stageCleared||stage>=maxStage)return;stage++;updateStats();prepareStage();hideOverlay();setMessage(`단계 ${stage} 시작! 이전 단계보다 공 속도가 빨라집니다.`)}
+function launchBall(){
+  if(gameOver||stageCleared)return;
+  if(!launched){const angle=Math.random()*.8+1.15;ball.dx=Math.cos(angle)*ball.speed;ball.dy=-Math.abs(Math.sin(angle)*ball.speed);launched=true;paused=false;hideOverlay();setMessage('공이 발사되었습니다.')}
+  else{paused=!paused;setMessage(paused?'일시정지되었습니다.':'게임을 계속합니다.')}
+}
+function movePaddle(){
+  if(leftPressed)paddle.x-=paddle.speed;if(rightPressed)paddle.x+=paddle.speed;
+  paddle.x=Math.max(0,Math.min(W-paddle.w,paddle.x));
+  if(!launched){ball.x=paddle.x+paddle.w/2;ball.y=paddle.y-ball.r-2}
+}
+function moveBall(){
+  if(!launched||paused||gameOver||stageCleared)return;
+  ball.x+=ball.dx;ball.y+=ball.dy;
+  if(ball.x-ball.r<=0||ball.x+ball.r>=W){ball.dx*=-1;ball.x=Math.max(ball.r,Math.min(W-ball.r,ball.x))}
+  if(ball.y-ball.r<=0){ball.dy*=-1;ball.y=ball.r}
+  if(ball.dy>0&&ball.y+ball.r>=paddle.y&&ball.y-ball.r<=paddle.y+paddle.h&&ball.x>=paddle.x&&ball.x<=paddle.x+paddle.w){
+    const hit=(ball.x-(paddle.x+paddle.w/2))/(paddle.w/2),speed=Math.sqrt(ball.dx*ball.dx+ball.dy*ball.dy);
+    ball.dx=hit*speed*.9;ball.dy=-Math.sqrt(Math.max(1,speed*speed-ball.dx*ball.dx));ball.y=paddle.y-ball.r-1;
+  }
+  for(const brick of bricks){
+    if(!brick.alive)continue;
+    if(ball.x+ball.r>brick.x&&ball.x-ball.r<brick.x+brick.w&&ball.y+ball.r>brick.y&&ball.y-ball.r<brick.y+brick.h){
+      brick.alive=false;ball.dy*=-1;score+=10;updateStats();break;
+    }
+  }
+  if(ball.y-ball.r>H){
+    lives--;updateStats();
+    if(lives<=0)endGame();
+    else{resetBall();showOverlay('생명 감소',`남은 생명은 ${lives}개입니다. 스페이스를 눌러 다시 시작하세요.`);setMessage('공이 바닥에 떨어졌습니다. 생명이 1 줄었습니다.')}
+  }
+  checkStageClear();
+}
+function checkStageClear(){
+  if(bricks.length&&bricks.every(b=>!b.alive)&&!stageCleared){
+    stageCleared=true;launched=false;
+    if(stage>=maxStage){running=false;showOverlay('모든 단계 완료!',`최종 점수는 ${score}점입니다.`);setMessage('축하합니다! 3단계까지 모두 완료했습니다.')}
+    else{showOverlay(`단계 ${stage} 완료!`,'다음 단계 버튼을 눌러 계속하세요.');nextBtn.disabled=false;setMessage(`단계 ${stage}의 모든 벽돌을 깼습니다.`)}
+  }
+}
+function endGame(){running=false;gameOver=true;launched=false;showOverlay('게임 끝',`생명이 모두 소진되었습니다. 최종 점수는 ${score}점입니다.`);setMessage('게임이 종료되었습니다. 다시 하기 버튼으로 재시작할 수 있습니다.')}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#11263d');g.addColorStop(1,'#0b1725');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const colors=['#ff7b6b','#ffa85a','#ffd45d','#72d18c','#62b6e7','#9b8cf2'];
+  for(const b of bricks){if(!b.alive)continue;ctx.fillStyle=colors[b.row%colors.length];rr(b.x,b.y,b.w,b.h,6);ctx.fill()}
+  ctx.fillStyle='#f3f7fb';rr(paddle.x,paddle.y,paddle.w,paddle.h,9);ctx.fill();
+  ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fillStyle='#fff';ctx.shadowColor='#a8d7ff';ctx.shadowBlur=12;ctx.fill();ctx.shadowBlur=0;
+}
+function loop(){movePaddle();moveBall();draw();animationId=requestAnimationFrame(loop)}
+
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')leftPressed=true;if(e.key==='ArrowRight')rightPressed=true;if(e.code==='Space'){e.preventDefault();launchBall()}});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')leftPressed=false;if(e.key==='ArrowRight')rightPressed=false});
+function movePaddleTo(clientX){const rect=canvas.getBoundingClientRect(),scaleX=W/rect.width,x=(clientX-rect.left)*scaleX;paddle.x=Math.max(0,Math.min(W-paddle.w,x-paddle.w/2));if(!launched){ball.x=paddle.x+paddle.w/2;ball.y=paddle.y-ball.r-2}}
+canvas.addEventListener('mousemove',e=>movePaddleTo(e.clientX));
+canvas.addEventListener('touchmove',e=>{e.preventDefault();if(e.touches.length)movePaddleTo(e.touches[0].clientX)},{passive:false});
+startBtn.addEventListener('click',startGame);restartBtn.addEventListener('click',restartGame);nextBtn.addEventListener('click',nextStage);
+
+prepareStage();updateStats();draw();
+})();
+</script>
+</body>
+</html>
