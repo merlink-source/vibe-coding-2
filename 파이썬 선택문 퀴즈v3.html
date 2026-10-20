@@ -1,0 +1,165 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>파이썬 선택문 퀴즈 · TXT 순위</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,"Malgun Gothic",sans-serif;background:#f4f5ff;color:#24314b;padding:20px;margin:0}.app{max-width:720px;margin:20px auto;background:white;border-radius:24px;padding:clamp(20px,5vw,40px);box-shadow:0 15px 40px #33447722}
+h1{font-size:clamp(24px,5vw,34px)}h2{margin-top:12px}.tag{background:#e9e8ff;color:#5651b5;border-radius:30px;padding:8px 13px;display:inline-block;font-weight:700}.panel{background:#f1f5ff;border-radius:16px;padding:18px;margin:16px 0}
+input{width:100%;font-size:18px;border:2px solid #c9d5f1;border-radius:12px;padding:13px;margin:8px 0}.btn{background:#6265df;color:#fff;border:0;border-radius:14px;padding:15px 20px;font-weight:800;font-size:17px;cursor:pointer;min-height:50px;margin:5px 0}.btn:disabled{opacity:.45;cursor:not-allowed}.alt{background:#e8edff;color:#343e79}.choice{display:block;width:100%;text-align:left;border:2px solid #dce4f4;border-radius:14px;padding:15px;font-size:17px;background:#fafbff;margin:10px 0;cursor:pointer;color:#24314b}.choice.correct{background:#dcf9e9;border-color:#259963}.choice.wrong{background:#ffe2e6;border-color:#e24865}.choice:disabled{cursor:default}.meta{display:flex;justify-content:space-between;font-weight:800;margin-top:17px;gap:10px}.track{height:12px;border-radius:8px;background:#e8edfa;margin:12px 0 18px;overflow:hidden}.bar{height:100%;background:#8583ec}pre{background:#253047;color:white;border-radius:12px;padding:17px;white-space:pre-wrap;font-size:16px;line-height:1.5}.feedback{padding:14px;border-radius:12px;margin:12px 0;font-weight:700}.good{background:#e1f8eb;color:#17633f}.bad{background:#fff0f1;color:#9b2636}.status{font-size:14px;line-height:1.6;white-space:pre-wrap}.error{color:#b12840}.ok{color:#18734c}ol{padding-left:30px}li{padding:9px;border-bottom:1px solid #e4eaf5}small{color:#5c6780}button:focus-visible,input:focus-visible{outline:3px solid #4b71fa;outline-offset:2px}
+</style></head><body><main class="app">
+<span class="tag">🐍 고1 정보 · 알고리즘과 프로그래밍</span>
+<h1>반짝반짝 파이썬 퀴즈 ✨</h1>
+<p>선택문 5문제 · 정답 +10점 · 오답 힌트 · TXT 파일 순위표</p>
+<section id="entry">
+<div class="panel"><label for="student"><b>학생 이름 또는 별명</b></label><input id="student" maxlength="16" autocomplete="off" placeholder="예: 코딩왕">
+<p><b>① 기존 순위 TXT 파일을 열거나 새로 만드세요.</b></p>
+<button class="btn alt" id="openfile">📂 순위 파일 열기</button>
+<button class="btn alt" id="newfile">📝 새 순위 파일 만들기</button>
+<div id="fileinfo" class="status" role="status">선택된 순위 파일이 없습니다.</div>
+<p><small>같은 반 순위를 이어가려면 매번 같은 TXT 파일을 선택하세요. 각 학생의 점수를 파일에 누적합니다.</small></p>
+</div>
+<button class="btn" id="start" disabled>퀴즈 시작하기 →</button>
+</section>
+<section id="quiz" hidden>
+<div class="meta"><span id="count"></span><span id="score"></span></div>
+<div class="track"><div id="bar" class="bar"></div></div>
+<h2 id="question"></h2><pre id="code" hidden></pre><div id="choices"></div>
+<div id="feedback" role="status" aria-live="polite"></div>
+<button class="btn" id="next" hidden>다음 문제 →</button>
+</section>
+<section id="result" hidden>
+<h2>🎉 퀴즈 완료!</h2><h1 id="finalscore"></h1>
+<p id="saveStatus" class="status" role="status" aria-live="polite"></p>
+<h2>🏆 TXT 파일에서 읽은 최종 순위</h2>
+<ol id="ranking"></ol>
+<button class="btn alt" id="retrySave" hidden>다시 저장하고 순위 불러오기</button>
+<button class="btn" id="restart">새 학생 시작하기</button>
+</section>
+<p><small>실제 학생 이름 대신 별명을 권장합니다. TXT 파일을 여러 기기가 동시에 자동 공유하지는 않습니다. Chrome·Edge의 파일 접근 권한이 필요합니다.</small></p>
+</main><script>
+const questions=[
+{q:"다음 중 x가 10일 때 참(True)이 되는 조건식은?",code:"x = 10",options:["x < 5","x == 10","x != 10","x > 20"],answer:1,why:"'=='는 두 값이 같은지 비교합니다. x가 10이므로 x == 10이 참입니다."},
+{q:"다음 코드를 실행하면 무엇이 출력될까요?",code:"age = 17\nif age >= 16:\n    print('입장 가능')",options:["아무것도 출력되지 않는다","입장 불가","입장 가능","오류가 발생한다"],answer:2,why:"17 >= 16이 참이므로 if문 안의 print가 실행됩니다."},
+{q:"다음 중 파이썬 if문의 문법으로 올바른 것은?",code:null,options:["if score >= 60:","if (score >= 60) then","if score >= 60","if score >= 60 {}"],answer:0,why:"파이썬 if문은 조건식 뒤에 콜론(:)을 붙이고, 실행할 코드를 들여쓰기합니다."},
+{q:"다음 코드의 출력 결과는 무엇일까요?",code:"score = 75\nif score >= 90:\n    print('A')\nelif score >= 70:\n    print('B')\nelse:\n    print('C')",options:["A","B","C","A와 B"],answer:1,why:"75는 90 이상이 아니지만 70 이상이므로 elif 블록의 B가 출력됩니다."},
+{q:"다음 코드에서 x가 0일 때 출력되는 결과는?",code:"x = 0\nif x > 0:\n    print('양수')\nelif x < 0:\n    print('음수')\nelse:\n    print('영')",options:["양수","음수","아무것도 출력되지 않는다","영"],answer:3,why:"x > 0과 x < 0이 모두 거짓이므로 else 블록의 '영'이 출력됩니다."}
+];
+
+const hints=["두 값이 같은지 확인하는 비교 연산자를 찾아보세요.","조건식의 왼쪽 값과 오른쪽 값을 비교해 보세요.","파이썬은 조건식 끝의 문장 부호와 들여쓰기를 확인해야 해요.","if가 거짓일 때 다음 elif의 조건을 순서대로 검사해 보세요.","if와 elif의 조건이 모두 거짓이면 어느 부분이 실행될까요."];
+const $=id=>document.getElementById(id);
+let fileHandle=null,student="",index=0,points=0,wrong=false,solved=false,saving=false;
+const header="이름\t점수\t기록시각\n";
+function errorText(e){return e?.name==="AbortError"?"선택이 취소되었습니다.":(e?.message||String(e))}
+function updateFileState(msg,isError=false){$('fileinfo').textContent=msg;$('fileinfo').className='status '+(isError?'error':'ok');$('start').disabled=!fileHandle}
+async function checkAccess(handle,write=false){
+ const opts={mode:write?'readwrite':'read'};
+ if((await handle.queryPermission(opts))==='granted')return true;
+ return (await handle.requestPermission(opts))==='granted';
+}
+async function readText(){
+ if(!fileHandle)throw Error('순위 파일을 먼저 선택해야 합니다.');
+ if(!await checkAccess(fileHandle,false))throw Error('파일 읽기 권한이 필요합니다.');
+ return await (await fileHandle.getFile()).text();
+}
+function parse(text){
+ let lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());
+ if(lines[0]===header.trim())lines.shift();
+ return lines.map((s,i)=>{
+  let [name,score,date]=s.split('\t');
+  const n=Number(score);
+  if(!name||!Number.isInteger(n)||n<0||n>50||n%10!==0||!date)throw Error(`${i+1}번째 기록 형식이 맞지 않습니다. (이름, 점수, 기록시각은 탭으로 구분)`);
+  return {name,score:n,date};
+ });
+}
+function serialize(rows){return header+rows.map(r=>[r.name.replace(/[\t\r\n]/g,' '),r.score,r.date].join('\t')).join('\n')+(rows.length?'\n':'')}
+async function writeText(text){
+ if(!await checkAccess(fileHandle,true))throw Error('파일 쓰기 권한이 필요합니다.');
+ let writable=await fileHandle.createWritable();
+ try{await writable.write(text);await writable.close()}catch(e){try{await writable.abort()}catch{}throw e}
+}
+$('openfile').onclick=async()=>{
+ try{
+  if(!window.showOpenFilePicker)throw Error('현재 브라우저에서 TXT 직접 수정이 지원되지 않습니다. 최신 Chrome 또는 Edge에서 열어 주세요.');
+  const [handle]=await showOpenFilePicker({types:[{description:'텍스트 파일',accept:{'text/plain':['.txt']}}],multiple:false});
+  const text=await (await handle.getFile()).text();parse(text);
+  fileHandle=handle;updateFileState(`선택된 파일: ${handle.name} · 기존 기록 ${parse(text).length}건`);
+ }catch(e){updateFileState('파일을 열지 못했습니다: '+errorText(e),true)}
+};
+$('newfile').onclick=async()=>{
+ try{
+  if(!window.showSaveFilePicker)throw Error('현재 브라우저에서 TXT 직접 수정이 지원되지 않습니다. 최신 Chrome 또는 Edge에서 열어 주세요.');
+  const handle=await showSaveFilePicker({suggestedName:'파이썬_퀴즈_순위.txt',types:[{description:'텍스트 파일',accept:{'text/plain':['.txt']}}]});
+  fileHandle=handle;await writeText(header);
+  updateFileState(`새 파일 생성: ${handle.name} · 기록 0건`);
+ }catch(e){updateFileState('파일을 만들지 못했습니다: '+errorText(e),true)}
+};
+$('start').onclick=()=>{
+ const name=$('student').value.trim().replace(/[\t\r\n]/g,' ');
+ if(!name){alert('이름 또는 별명을 입력해 주세요.');$('student').focus();return}
+ if(!fileHandle){alert('TXT 순위 파일을 먼저 선택해 주세요.');return}
+ student=name;index=0;points=0;$('entry').hidden=true;$('result').hidden=true;$('quiz').hidden=false;render();
+};
+function render(){
+ wrong=false;solved=false;
+ const q=questions[index];
+ $('count').textContent=`${index+1} / ${questions.length}번째 문제`;
+ $('score').textContent=`${student} · ${points}점`;
+ $('bar').style.width=((index+1)/questions.length*100)+'%';
+ $('question').textContent=q.q;$('code').hidden=!q.code;
+ if(q.code)$('code').textContent=q.code;
+ $('feedback').textContent='';$('feedback').className='';$('next').hidden=true;
+ $('choices').replaceChildren();
+ q.options.forEach((txt,i)=>{
+  const btn=document.createElement('button');btn.className='choice';btn.textContent=`${i+1}. ${txt}`;
+  btn.onclick=()=>choose(i);$('choices').append(btn);
+ });
+}
+function choose(i){
+ if(solved)return;
+ const q=questions[index],buttons=[...$('choices').children],f=$('feedback');
+ if(i===q.answer){
+  solved=true;
+  if(!wrong)points+=10;
+  buttons.forEach(b=>b.disabled=true);buttons[i].classList.add('correct');
+  $('score').textContent=`${student} · ${points}점`;
+  f.className='feedback good';f.textContent=(wrong?'✅ 정답입니다! (힌트를 사용했으므로 0점)':'✅ 정답! +10점')+' '+q.why;
+  $('next').textContent=index===questions.length-1?'최종 결과 보기 →':'다음 문제 →';$('next').hidden=false;
+ }else{
+  wrong=true;buttons[i].disabled=true;buttons[i].classList.add('wrong');
+  f.className='feedback bad';f.textContent='❌ 오답! 힌트: '+hints[index]+' 다른 답을 선택해 보세요.';
+ }
+}
+$('next').onclick=()=>{index++;if(index<questions.length)render();else finish()};
+async function finish(){
+ $('quiz').hidden=true;$('result').hidden=false;
+ $('finalscore').textContent=`${student}: ${points} / 50점`;
+ await saveAndReload();
+}
+async function saveAndReload(){
+ if(saving)return;saving=true;$('retrySave').hidden=true;
+ $('saveStatus').textContent='TXT 파일의 기존 기록을 읽고 점수를 저장하는 중...';
+ try{
+  // 기존 기록을 매번 디스크에서 다시 읽고, 새 기록을 추가하고, 저장한 파일을 다시 읽는다.
+  const records=parse(await readText());
+  records.push({name:student,score:points,date:new Date().toISOString()});
+  await writeText(serialize(records));
+  const fromFile=parse(await readText());
+  fromFile.sort((a,b)=>b.score-a.score||a.date.localeCompare(b.date));
+  $('ranking').replaceChildren();
+  fromFile.forEach((r,i)=>{
+   const li=document.createElement('li');
+   li.textContent=`${i+1}위 · ${r.name} — ${r.score}점 (${r.date.slice(0,10)})`;
+   $('ranking').append(li);
+  });
+  $('saveStatus').className='status ok';
+  $('saveStatus').textContent=`저장 완료: ${fileHandle.name} · ${fromFile.length}건의 기록을 TXT 파일에서 다시 불러와 정렬했습니다.`;
+ }catch(e){
+  $('ranking').replaceChildren();
+  $('saveStatus').className='status error';
+  $('saveStatus').textContent='TXT 파일 저장/읽기 실패: '+errorText(e)+'\n파일 권한과 저장 위치를 확인하세요. 저장되지 않았다면 순위가 표시되지 않습니다.';
+  $('retrySave').hidden=false;
+ }finally{saving=false}
+}
+$('retrySave').onclick=saveAndReload;
+$('restart').onclick=()=>{
+ $('result').hidden=true;$('entry').hidden=false;$('student').value='';$('student').focus();
+};
+</script></body></html>
