@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>반짝반짝 분수 덧셈</title>
+<style>
+:root{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#25334c;background:#fff8ec}
+*{box-sizing:border-box}body{margin:0;padding:24px 14px;min-height:100vh}
+main{max-width:680px;margin:auto;background:white;padding:28px;border-radius:28px;box-shadow:0 12px 40px #dfb97144}
+h1{text-align:center;font-size:clamp(25px,5vw,36px);margin:4px 0 9px;color:#6547bb}
+.intro{text-align:center;color:#64748b;margin:0 0 22px}
+.stats{display:flex;justify-content:space-between;gap:12px;background:#eaf8ff;border-radius:18px;padding:16px;font-weight:800;font-size:21px}
+.progress{height:14px;background:#e9e5f5;border-radius:12px;margin:18px 0;overflow:hidden}.progress div{height:100%;width:0;background:#9775fa;transition:width .2s}
+.question{text-align:center;padding:18px 6px;background:#faf5ff;border-radius:22px}
+.prompt{font-size:18px;color:#65518b;font-weight:700}.math{display:flex;align-items:center;justify-content:center;gap:20px;font-size:34px;font-weight:800;margin:18px 0}
+.fraction{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;line-height:1.25}
+.fraction>span:first-child{border-bottom:3px solid currentColor;width:100%;padding:0 8px 5px}
+.fraction>span:last-child{padding-top:5px}
+.whole-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}.whole-wrap input{width:92px}.whole-wrap small{font-size:14px;color:#65518b}.keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;max-width:340px;margin:0 auto 20px}.keypad button{min-width:0;padding:14px 4px;background:#dff2ff;color:#254b75;font-size:24px}.keypad button.special{background:#ffedc0;font-size:17px}.keypad-title{text-align:center;font-weight:800;color:#65518b;margin:8px 0 10px}.selected{border-color:#7155db!important;background:#f4edff!important;box-shadow:0 0 0 3px #c4b5fd}.answer{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin:22px 0}
+.answer label{font-weight:700;font-size:20px}.inputs{display:flex;flex-direction:column;gap:6px;width:115px}
+input{font:700 26px inherit;font-family:inherit;font-size:26px;font-weight:800;text-align:center;width:100%;border:3px solid #d5c8ef;border-radius:14px;padding:10px;background:white}
+input:focus{outline:3px solid #c1e2ff}
+.bar{height:3px;background:#25334c}
+.actions{display:flex;gap:12px;flex-wrap:wrap}button{flex:1;min-width:145px;border:0;border-radius:16px;padding:17px;font-size:20px;font-weight:800;cursor:pointer;touch-action:manipulation}
+.primary{background:#7155db;color:white}.secondary{background:#ffe492;color:#634600}
+button:disabled{opacity:.45;cursor:not-allowed}
+.message{min-height:86px;background:#f3f8fc;padding:17px;border-radius:16px;font-size:18px;line-height:1.6;margin-top:18px}
+.success{background:#e6f9e9}.error{background:#fff1ea}
+footer{text-align:center;margin-top:20px;color:#6f788a;font-size:14px}
+[hidden]{display:none!important}
+@media(max-width:450px){main{padding:18px}.math{gap:11px;font-size:29px}.stats{font-size:18px}.actions button{min-width:130px}}
+</style>
+</head>
+<body>
+<main>
+<h1>🌈 반짝반짝 분수 덧셈</h1>
+<p class="intro">분모를 맞추고 분수를 더해 봐요!</p>
+<div class="stats"><span id="progressText">1 / 10 문제</span><span id="score">점수: 0점</span></div>
+<div class="progress" aria-label="학습 진행률"><div id="progressBar"></div></div>
+<section id="play">
+<div class="question"><div class="prompt">다음 분수를 더해 보세요.</div><div class="math" id="expression"></div></div>
+<div class="answer"><strong>정답</strong><div class="whole-wrap"><small>받아올림(자연수)</small><input id="whole" type="text" inputmode="none" value="0" aria-label="받아올림 자연수" readonly></div><div class="inputs">
+<input id="numerator" type="text" inputmode="none" placeholder="분자" aria-label="정답 분자" readonly>
+<div class="bar"></div>
+<input id="denominator" type="text" inputmode="none" placeholder="분모" aria-label="정답 분모" readonly>
+</div></div>
+<p class="keypad-title">🔢 칸을 선택하고 숫자판을 눌러요</p><div class="keypad" aria-label="숫자 입력판"><button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button><button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button><button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button><button type="button" class="special" data-key="clear">전체 지우기</button><button type="button" data-key="0">0</button><button type="button" class="special" data-key="back">← 지우기</button></div>
+<div class="actions"><button class="primary" id="check">정답 확인</button><button class="secondary" id="next" disabled>다음 문제 →</button></div>
+<div id="message" class="message" role="status" aria-live="polite">자연수(받아올림), 분자, 분모를 입력해요. 자연수가 없으면 0으로 두세요!</div>
+</section>
+<section id="finish" hidden class="question">
+<h2>🎉 연습 완료!</h2><p id="result" style="font-size:24px;font-weight:800"></p>
+<button class="primary" id="restart">다시 풀기 🔄</button>
+</section>
+<footer>로그인 없이 바로 연습할 수 있어요 · 총 10문제</footer>
+</main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const simplify=(a,b)=>{const g=gcd(a,b);return [a/g,b/g]};
+const frac=(n,d)=>`<span class="fraction"><span>${n}</span><span>${d}</span></span>`;
+let questions=[],index=0,score=0,answered=false,attempted=false,activeField='numerator';
+const fields=['whole','numerator','denominator'];
+function selectField(id){activeField=id;fields.forEach(f=>$(f).classList.toggle('selected',f===id));}
+function keypad(key){if(answered)return;const el=$(activeField);if(key==='clear'){fields.forEach(f=>$(f).value=f==='whole'?'0':'');return;}
+if(key==='back'){el.value=el.value.slice(0,-1);if(activeField==='whole'&&!el.value)el.value='0';return;}
+if(el.value.length>=4)return;
+if(activeField==='whole'&&el.value==='0')el.value=key;else el.value+=key;
+}
+function makeQuestions(){
+ const pairs=[];
+ for(let d1=2;d1<=8;d1++)for(let d2=2;d2<=8;d2++){
+  for(let n1=1;n1<d1;n1++)for(let n2=1;n2<d2;n2++){
+   if(n1/d1+n2/d2<=1.5 && gcd(n1,d1)===1 && gcd(n2,d2)===1){
+    const [an,ad]=simplify(n1*d2+n2*d1,d1*d2);
+    pairs.push({n1,d1,n2,d2,an,ad});
+   }
+  }
+ }
+ for(let i=pairs.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[pairs[i],pairs[j]]=[pairs[j],pairs[i]]}
+ return pairs.slice(0,10);
+}
+function render(){
+ let q=questions[index]; answered=false;attempted=false;
+ $('progressText').textContent=`${index+1} / 10 문제`;
+ $('score').textContent=`점수: ${score}점`;
+ $('progressBar').style.width=`${index/10*100}%`;
+ $('expression').innerHTML=`${frac(q.n1,q.d1)} <span>+</span> ${frac(q.n2,q.d2)} <span>= ?</span>`;
+ $('whole').value='0';$('numerator').value='';$('denominator').value='';selectField('numerator');
+ fields.forEach(f=>$(f).disabled=false);
+ $('check').disabled=false;$('next').disabled=true;
+ $('next').textContent=index===9?'결과 보기 →':'다음 문제 →';
+ $('message').className='message';
+ $('message').textContent='자연수(받아올림), 분자, 분모를 입력해요. 자연수가 없으면 0으로 두세요!';
+}
+function check(){
+ if(answered)return;
+ const ws=$('whole').value,ns=$('numerator').value,ds=$('denominator').value;
+ const w=Number(ws),n=Number(ns),d=Number(ds);
+ if(ws.trim()===''||ns.trim()===''||ds.trim()===''||!Number.isInteger(w)||!Number.isInteger(n)||!Number.isInteger(d)||w<0||n<0||d<=0){
+  $('message').className='message error';
+  $('message').textContent='자연수와 분자는 0 이상, 분모는 1 이상의 정수로 입력해 주세요.';
+  return;
+ }
+ const q=questions[index];
+ if((w*d+n)*q.ad===q.an*d){
+  if(!attempted)score+=10;
+  answered=true;$('check').disabled=true;$('next').disabled=false;
+  fields.forEach(f=>$(f).disabled=true);
+  $('score').textContent=`점수: ${score}점`;
+  $('message').className='message success';
+  $('message').textContent=attempted?'✅ 정답이에요! 힌트를 활용해 잘 풀었어요. (점수는 첫 시도 기준이에요.)':'🎉 정답이에요! 10점을 얻었어요.';
+ }else{
+  attempted=true;
+  $('message').className='message error';
+  const lcm=q.d1*q.d2/gcd(q.d1,q.d2);
+  $('message').textContent=`💡 힌트: 두 분모 ${q.d1}, ${q.d2}의 최소공배수는 ${lcm}이에요. 두 분수를 분모 ${lcm}으로 통분해 분자를 더해 보세요. 분자가 분모 이상이면 자연수로 받아올림 해요.`;
+ }
+}
+function next(){
+ if(!answered)return;
+ if(index===9){
+  $('play').hidden=true;$('finish').hidden=false;
+  $('progressText').textContent='10 / 10 문제';
+  $('progressBar').style.width='100%';
+  $('result').textContent=`최종 점수: ${score} / 100점`;
+ }else{index++;render()}
+}
+function start(){questions=makeQuestions();index=0;score=0;$('play').hidden=false;$('finish').hidden=true;render()}
+$('check').addEventListener('click',check);
+$('next').addEventListener('click',next);
+$('restart').addEventListener('click',start);
+fields.forEach(id=>$(id).addEventListener('click',()=>selectField(id)));
+ document.querySelectorAll('[data-key]').forEach(button=>button.addEventListener('click',()=>keypad(button.dataset.key)));
+ document.addEventListener('keydown',e=>{if($('play').hidden||answered)return;if(/^\\d$/.test(e.key)){keypad(e.key);e.preventDefault()}else if(e.key==='Backspace'){keypad('back');e.preventDefault()}else if(e.key==='Enter')check();});
+start();
+})();
+</script>
+</body>
+</html>
