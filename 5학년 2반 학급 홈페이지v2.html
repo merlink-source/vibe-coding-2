@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>햇살 가득 5학년 2반</title>
+<style>
+:root{--bg:#fffaf0;--ink:#273a3c;--teal:#15978a;--orange:#ffbe6b;--soft:#fff1d8;--line:#f0e5d6}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif}
+header{background:white;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}.head{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:17px 22px;flex-wrap:wrap}
+.logo{font-size:22px;font-weight:900;color:var(--teal);text-decoration:none}nav{display:flex;gap:8px;flex-wrap:wrap}nav a{text-decoration:none;color:#385555;font-weight:800;padding:10px 14px;border-radius:18px}nav a:hover,nav a:focus{background:#e9f8f2}
+.hero{text-align:center;padding:68px 18px 55px;background:radial-gradient(circle at 20% 30%,#ffe7ae 0,transparent 28%),radial-gradient(circle at 80% 10%,#d5f8e8 0,transparent 30%),#fff9eb}
+.pill{display:inline-block;background:#e1f5e8;color:#277761;padding:9px 18px;border-radius:999px;font-size:14px;font-weight:800}
+h1{font-size:clamp(31px,6vw,53px);margin:18px 0 8px;letter-spacing:-1.5px} .hero p{font-size:18px;color:#647474;margin:0 0 28px}
+.search{max-width:660px;margin:auto;display:flex;align-items:center;gap:12px;background:white;border:3px solid #27a98d;border-radius:26px;box-shadow:0 12px 30px #2b9a8021;padding:7px 7px 7px 21px}
+.search input{border:0;outline:0;min-width:0;flex:1;font:inherit;font-size:17px;padding:12px 0}.search button{border:0;background:var(--teal);color:white;border-radius:18px;min-height:51px;padding:0 25px;font-size:17px;font-weight:900;cursor:pointer}
+#message{min-height:26px;margin:13px auto 0;color:#4c756b;font-weight:700}
+main{max-width:1100px;padding:28px 22px 70px;margin:auto}.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:35px}.quick a{border-radius:20px;text-decoration:none;padding:19px;display:flex;gap:13px;align-items:center;color:#29424a;background:#fff;box-shadow:0 5px 20px #5b4c3010;font-weight:900;font-size:18px}
+.quick a span{font-size:27px}section{scroll-margin-top:100px;margin:28px 0 38px}.section-title{font-size:26px;letter-spacing:-.6px;margin-bottom:15px}.card{background:white;border:1px solid #f4eadd;border-radius:24px;padding:25px;box-shadow:0 6px 24px #694e2611}.intro{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;align-items:center}.intro p{line-height:1.8;font-size:17px}.intro-art{background:#f9eecf;border-radius:20px;font-size:75px;text-align:center;padding:37px 8px}.schedule{overflow:auto}.schedule table{border-collapse:separate;border-spacing:0;width:100%;min-width:590px;text-align:center}.schedule th{background:#e0f6ee;color:#236659}.schedule th,.schedule td{padding:17px 10px;border-right:1px solid #eaece7;border-bottom:1px solid #eaece7}.schedule th:first-child{border-top-left-radius:13px}.schedule th:last-child{border-top-right-radius:13px;border-right:0}.schedule td:last-child{border-right:0}.schedule tr:last-child td{border-bottom:0}.notices{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.notice{padding:22px;border:1px solid #f0e9de;border-radius:22px;background:white}.notice b{display:block;font-size:18px;margin:10px 0}.notice p{line-height:1.6;color:#617174}.tag{font-size:13px;font-weight:900;background:#fff0d5;color:#926021;display:inline-block;padding:6px 12px;border-radius:20px}.teacher{background:#eaf7f2;border:0}.teacher p{font-size:19px;line-height:1.8}.foot{text-align:center;padding:25px;color:#6c7d7d;font-size:14px;border-top:1px solid var(--line)}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #da8b19;outline-offset:3px}
+@media(max-width:680px){.head{justify-content:center}nav{justify-content:center;gap:1px}nav a{padding:8px}.quick,.notices,.intro{grid-template-columns:1fr}.hero{padding-top:42px}.search button{padding:0 17px}.intro-art{font-size:52px;padding:20px}.card{padding:19px}}
+
+.editbar{position:sticky;top:70px;z-index:3;display:flex;justify-content:center;flex-wrap:wrap;gap:9px;background:#fff8e5;border-bottom:1px solid #f2dca4;padding:10px}
+.editbar button{font:inherit;border:0;border-radius:12px;padding:11px 17px;cursor:pointer;font-weight:800;background:#e2f5ef;color:#155e55}
+.editbar button.primary{background:#138e7e;color:white}
+.editbar button:disabled{opacity:.45;cursor:not-allowed}
+.editbar small{width:100%;text-align:center;color:#69746f}
+.editing [data-edit]{outline:2px dashed #fa9f2b;outline-offset:3px;border-radius:3px;cursor:text}
+.editing [data-edit]:focus{outline:3px solid #168a78;background:#fffbed}
+#save-status{font-weight:700;color:#24695e;align-self:center}
+@media(max-width:680px){.editbar{top:110px;padding:8px;gap:5px}.editbar button{padding:9px}}
+</style></head><body>
+<header><div class="head"><a class="logo" data-edit=".logo" href="#top">🌞 햇살 가득 5학년 2반</a><nav aria-label="상단 메뉴"><a href="#about">우리 반 소개</a><a href="#schedule">학습 일정</a><a href="#notices">공지사항</a><a href="#teacher">선생님 한마디</a></nav></div></header><div class="editbar"><button id="edit-toggle" type="button">✏️ 글 수정하기</button>
+<button class="primary" disabled="" id="save-edits" type="button">💾 저장</button>
+<button id="reset-edits" type="button">↩️ 처음 내용으로</button>
+<span id="save-status" role="status"></span><small>수정 모드를 켜고 글자를 누르면 바로 고칠 수 있어요. 저장한 내용은 이 브라우저에 보관됩니다.</small></div>
+<div class="hero" id="top"><span class="pill" data-edit=".pill">✨ 함께 배우고 함께 자라는 우리 반</span><h1 data-edit=".hero h1">오늘도 반짝이는<br/>5학년 2반 🌈</h1><p data-edit=".hero p">친구들과 만드는 즐거운 배움의 공간에 오신 걸 환영해요!</p>
+<form class="search" id="search-form"><label for="search-input" style="font-size:25px">🔎</label><input aria-label="홈페이지 내용 검색" id="search-input" placeholder="찾고 싶은 내용을 입력해 보세요" type="search"/><button type="submit">검색</button></form><div aria-live="polite" id="message"></div></div>
+<main>
+<div class="quick"><a href="#about"><span>🏡</span>우리 반 알아보기 →</a><a href="#schedule"><span>📅</span>이번 주 일정 →</a><a href="#notices"><span>📣</span>새 소식 보기 →</a></div>
+<section id="about"><h2 class="section-title">🏡 우리 반 소개</h2><div class="card intro"><div><h3 data-edit="#about h3">서로 존중하며 함께 성장하는 교실</h3><p data-edit="#about p">우리 5학년 2반은 호기심을 가지고 도전하며, 친구들의 생각을 귀 기울여 듣는 따뜻한 교실이에요.<br/>실수해도 괜찮아요! 도전할 때마다 우리는 조금씩 성장하니까요.</p></div><div aria-hidden="true" class="intro-art">📚 🌼<br/>🧒🏻 👧🏻 🧑🏻</div></div></section>
+<section id="schedule"><h2 class="section-title">📅 주간 학습 일정</h2><div class="card schedule"><table><thead><tr><th scope="col">요일</th><th scope="col">1교시</th><th scope="col">2교시</th><th scope="col">3교시</th><th scope="col">4교시</th></tr></thead><tbody><tr><th scope="row">월요일</th><td data-edit="schedule-0">국어</td><td data-edit="schedule-1">수학</td><td data-edit="schedule-2">사회</td><td data-edit="schedule-3">체육</td></tr><tr><th scope="row">화요일</th><td data-edit="schedule-4">과학</td><td data-edit="schedule-5">국어</td><td data-edit="schedule-6">미술</td><td data-edit="schedule-7">미술</td></tr><tr><th scope="row">수요일</th><td data-edit="schedule-8">수학</td><td data-edit="schedule-9">영어</td><td data-edit="schedule-10">음악</td><td data-edit="schedule-11">국어</td></tr><tr><th scope="row">목요일</th><td data-edit="schedule-12">사회</td><td data-edit="schedule-13">과학</td><td data-edit="schedule-14">수학</td><td data-edit="schedule-15">체육</td></tr><tr><th scope="row">금요일</th><td data-edit="schedule-16">영어</td><td data-edit="schedule-17">국어</td><td data-edit="schedule-18">실과</td><td data-edit="schedule-19">창체</td></tr></tbody></table></div><p style="color:#8a7564;font-size:13px">※ 실습을 위해 만든 예시 시간표이며 실제 학교 일정이 아닙니다.</p></section>
+<section id="notices"><h2 class="section-title">📣 공지사항</h2><div class="notices"><article class="notice"><span class="tag" data-edit="notice-0">준비물</span><b data-edit="notice-1">미술 준비물 안내 🎨</b><p data-edit="notice-2">화요일 미술 시간에는 색연필과 사인펜을 챙겨 주세요.</p></article><article class="notice"><span class="tag" data-edit="notice-3">학습</span><b data-edit="notice-4">금요일 독서 시간 📖</b><p data-edit="notice-5">함께 읽고 싶은 책 한 권을 준비해 주세요.</p></article><article class="notice"><span class="tag" data-edit="notice-6">우리 반</span><b data-edit="notice-7">칭찬 나무 활동 🌳</b><p data-edit="notice-8">친구에게 고마웠던 일을 작은 메모로 남겨 보아요.</p></article></div><p style="color:#8a7564;font-size:13px">※ 위 공지사항 3개는 실습용 예시입니다.</p></section>
+<section id="teacher"><h2 class="section-title">💌 선생님 한마디</h2><div class="card teacher"><p data-edit="#teacher p">“사랑하는 5학년 2반 친구들! 🌷<br/>서로의 다름을 존중하고 새로운 것에 도전하는 여러분이 자랑스러워요. 오늘도 작은 성공을 하나씩 쌓아가 봅시다!”</p><strong data-edit="#teacher strong">— 5학년 2반 선생님 (예시 메시지)</strong></div></section>
+</main><footer class="foot">🌞 햇살 가득 5학년 2반 · 바이브 코딩 수업용 예시 홈페이지</footer>
+<script>
+document.getElementById('search-form').addEventListener('submit',function(e){e.preventDefault();const q=document.getElementById('search-input').value.trim();const msg=document.getElementById('message');if(!q){msg.textContent='검색어를 입력해 주세요.';return}const pages=[['소개','about'],['학급','about'],['우리 반','about'],['시간표','schedule'],['일정','schedule'],['수업','schedule'],['공부','schedule'],['공지','notices'],['준비물','notices'],['책','notices'],['독서','notices'],['미술','notices'],['선생님','teacher'],['한마디','teacher']];const found=pages.find(([key])=>q.includes(key)||key.includes(q));if(found){msg.textContent='“'+q+'” 관련 메뉴로 이동합니다.';document.getElementById(found[1]).scrollIntoView({behavior:'smooth'});}else{msg.textContent='“'+q+'”에 해당하는 메뉴를 찾지 못했어요. 소개, 일정, 공지, 선생님을 검색해 보세요.';}});
+</script><script>
+(() => {
+const nodes=[...document.querySelectorAll('[data-edit]')];
+const defaults=Object.fromEntries(nodes.map(el=>[el.dataset.edit,el.innerHTML]));
+const storageKey='class52_edited_v1';
+let editing=false;
+function read(){try{return JSON.parse(localStorage.getItem(storageKey)||'{}')}catch{return {}}}
+function apply(data){nodes.forEach(el=>{const key=el.dataset.edit;if(Object.prototype.hasOwnProperty.call(data,key)){el.textContent=data[key]}else{el.innerHTML=defaults[key]}})}
+apply(read());
+const toggle=document.querySelector('#edit-toggle'), save=document.querySelector('#save-edits'), status=document.querySelector('#save-status');
+function setMode(v){editing=v;document.body.classList.toggle('editing',v);nodes.forEach(el=>{el.contentEditable=v?'true':'false';el.spellcheck=v});toggle.textContent=v?'✅ 수정 마치기':'✏️ 글 수정하기';save.disabled=!v;status.textContent=v?'수정 후 저장을 눌러 주세요.':''}
+toggle.addEventListener('click',()=>setMode(!editing));
+save.addEventListener('click',()=>{const data=Object.fromEntries(nodes.map(el=>[el.dataset.edit,el.innerText]));try{localStorage.setItem(storageKey,JSON.stringify(data));status.textContent='저장했어요!'}catch{status.textContent='브라우저 저장을 사용할 수 없어요.'}setTimeout(()=>{if(!editing)status.textContent=''},2500)});
+document.querySelector('#reset-edits').addEventListener('click',()=>{if(!confirm('수정한 내용을 모두 지우고 처음으로 되돌릴까요?'))return;localStorage.removeItem(storageKey);apply({});status.textContent='처음 내용으로 돌아왔어요.'});
+})();
+</script></body></html>
