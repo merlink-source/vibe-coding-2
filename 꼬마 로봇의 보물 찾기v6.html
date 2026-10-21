@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>꼬마 로봇의 보물 찾기</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:14px;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:#fff7e9;color:#34445a}
+main{max-width:700px;margin:auto}
+h1{text-align:center;font-size:clamp(24px,5vw,36px)}
+h2{font-size:21px;margin:10px 0}
+.card{background:white;padding:18px;margin:13px 0;border-radius:24px;box-shadow:0 5px 18px #a88f7730}
+.top{display:flex;justify-content:space-between;font-size:19px;font-weight:bold}
+#board{display:grid;gap:6px;width:min(100%,460px);margin:20px auto}
+.cell{aspect-ratio:1;display:grid;place-items:center;background:#eaf5ff;border-radius:13px;border:2px solid #d8e9fa;font-size:clamp(22px,6vw,40px)}
+.wall{background:#d9efd2}.goal{background:#fff1bb}.robot{background:#dcd7ff}
+#message{font-weight:bold;text-align:center;padding:16px;min-height:59px;background:#fff3d8;border-radius:15px}
+#queue{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;min-height:62px;background:#ecf7ff;padding:9px;border-radius:15px;font-size:27px}
+.arrows{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:340px;margin:14px auto}
+button{font-family:inherit;border:0;border-radius:16px;padding:12px;min-height:64px;font-weight:bold;font-size:18px;cursor:pointer;touch-action:manipulation}
+.direction{font-size:33px;background:#cbe8ff}
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+#run{background:#bcebd0}#clear{background:#ffebaa}#restart{background:#f8d8df}#next{background:#ddd2ff}
+button:disabled{opacity:.5;cursor:default}
+.help{text-align:center;color:#596980}
+
+/* 프롬프트 2: 태블릿 가로 한 화면 배치 */
+body{padding:10px;background:#fff7eb}
+main{max-width:1200px}
+header{text-align:center}
+h1{font-size:clamp(22px,2.7vw,32px);margin:2px 0}
+h2{font-size:clamp(16px,1.65vw,21px);margin:5px 0}
+.help{margin:3px 0;font-size:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch}
+.card{margin:0;padding:12px 16px;border-radius:20px;min-width:0}
+#board{width:min(100%,48vh,460px);margin:8px auto;gap:4px}
+.cell{border-radius:10px;font-size:clamp(21px,4vh,38px)}
+#message{min-height:48px;padding:9px;font-size:clamp(15px,1.6vw,19px)}
+#queue{justify-content:flex-start;gap:5px;align-content:start;min-height:62px;max-height:106px;overflow:auto;padding:6px}
+.step{display:inline-flex;align-items:center;justify-content:center;border:2px solid transparent;background:white;border-radius:11px;padding:3px 6px;min-width:43px;min-height:43px;font-size:25px;font-weight:bold;position:relative}
+.step::after{content:attr(data-number);position:absolute;bottom:-2px;right:2px;font-size:11px;color:#5c6a77}
+.step.current{background:#fff0a7;border-color:#ff9900;box-shadow:0 0 0 3px #ffe0a6}
+.step.done{background:#c7f3d9}.step.error{background:#ffd0d2;border-color:#ea4545;box-shadow:0 0 0 3px #ffe0e0}
+#status{font-size:16px;min-height:24px;font-weight:bold;margin:6px 0}
+.arrows{max-width:255px;gap:5px;margin:6px auto}
+button{min-height:50px;padding:7px;font-size:16px}
+.direction{font-size:29px}
+.actions{gap:7px}
+#next[hidden]{display:none}
+@media(orientation:landscape) and (min-width:700px){
+ body{overflow:hidden}
+ main{height:calc(100dvh - 20px);display:flex;flex-direction:column}
+ .layout{flex:1;min-height:0}
+ .card{display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+ #board{width:min(100%,calc(100dvh - 170px),410px)}
+ #queue{flex:1;min-height:45px}
+ .arrows{grid-auto-rows:minmax(40px,1fr)}
+ button{min-height:44px}
+}
+@media(max-width:699px), (orientation:portrait){
+ body{overflow:auto}
+ .layout{grid-template-columns:1fr}
+ #board{width:min(100%,420px)}
+}
+
+#history{display:flex;flex-direction:column;gap:4px;max-height:112px;overflow-y:auto}
+.past{background:#dfe3e8;border-radius:10px;padding:4px 7px;color:#687481;font-size:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;opacity:.65}
+.past span{filter:grayscale(.8)}
+#feedback{background:#fff0c3;padding:6px 10px;border-radius:11px;text-align:center;font-weight:800;font-size:clamp(14px,1.45vw,18px);min-height:36px}
+#tryCount{color:#7359b9;font-size:15px;margin-left:8px}
+#queue{flex:0 1 auto;min-height:53px;max-height:100px}
+#status{margin:3px 0}
+@media(orientation:landscape) and (min-width:700px){
+ #history{max-height:14vh}
+ #queue{max-height:13vh}
+ .card{padding:9px 13px}
+ #board{width:min(100%,calc(100dvh - 156px),405px)}
+}
+
+.past span.bad-arrow{background:#ffb2b9;color:#a60f24;filter:none;opacity:1;border:2px solid #d8243c;border-radius:8px;padding:3px;font-weight:900}
+#celebration[hidden]{display:none}
+#celebration{position:fixed;z-index:30;inset:0;background:#262143aa;display:grid;place-items:center;padding:20px}
+.celebrate-card{background:#fff8df;border:5px solid #e5c57c;border-radius:28px;text-align:center;padding:clamp(20px,4vw,40px);width:min(90vw,600px);box-shadow:0 20px 80px #3a2d5788}
+.celebrate-card h2{font-size:clamp(29px,5.4vw,53px);line-height:1.35}
+.celebrate-card p{font-size:clamp(18px,2vw,25px)}
+.celebrate-card button{background:#bbf0ca;margin:8px;padding:14px 25px}
+#stageNotice{font-weight:800;color:#5a5599;font-size:clamp(14px,1.5vw,19px);text-align:center}
+
+/* 프롬프트 5: 새 도전의 목표를 그림과 짧은 말로 강조 */
+#celebrateDesc{font-size:clamp(19px,2.6vw,29px);font-weight:800;line-height:1.55;max-width:600px;margin:14px auto 22px}
+#celebrateContinue{background:#f9d779;border:3px solid #e9b63a;font-size:clamp(18px,2vw,25px)}
+</style>
+</head>
+<body><main>
+<header><h1>🤖 로봇 보물 찾기 🎁</h1><p class="help">👆 화살표 모으기 → ▶️ 출발</p></header>
+<div class="layout">
+<section class="card">
+<div class="top"><span id="stage"></span><span id="dimensions"></span></div>
+<div id="board" aria-label="로봇 미로"></div>
+<div id="stageNotice"></div><div id="message" role="status" aria-live="polite"></div>
+</section>
+<section class="card">
+<h2>👣 화살표 길 <span id="tryCount">1️⃣ 첫 시도</span></h2><div id="history" aria-label="지난 시도"></div><div id="queue" aria-label="현재 시도 화살표 순서"></div>
+<div id="status" role="status">👆 방향을 골라요</div><div id="feedback" aria-live="polite">🎯 한 번에 성공하면 다음 단계!</div>
+<div class="arrows">
+<div></div><button class="direction" data-direction="up" aria-label="위">⬆️</button><div></div>
+<button class="direction" data-direction="left" aria-label="왼쪽">⬅️</button>
+<button class="direction" data-direction="down" aria-label="아래">⬇️</button>
+<button class="direction" data-direction="right" aria-label="오른쪽">➡️</button>
+</div>
+<div class="actions">
+<button id="run">▶️ 출발</button><button id="clear">↩️ 하나 지우기</button>
+<button id="restart">🔄 단계 처음부터</button><button id="next" hidden>🎉 다음 단계</button>
+</div>
+<p class="help">🌳 멈춤!　🎁 성공!</p>
+</section></div></main>
+<div id="celebration" hidden role="dialog" aria-modal="true" aria-labelledby="celebrateTitle"><div class="celebrate-card"><div style="font-size:clamp(48px,8vw,90px)">🏆🎁🎉</div><h2 id="celebrateTitle">보물을 모두 찾았어요!</h2><p id="celebrateDesc">정말 멋져요!</p><button id="celebrateContinue">🚀 계속하기</button></div></div>
+<script>
+
+"use strict";
+const baseLevels=[{"n": 3, "start": [0, 0], "goal": [2, 2], "walls": []}, {"n": 4, "start": [0, 0], "goal": [3, 3], "walls": [[1, 0], [1, 1], [2, 3]]}, {"n": 5, "start": [0, 0], "goal": [4, 4], "walls": [[0, 1], [0, 2], [1, 3], [2, 1], [3, 1], [3, 3], [4, 3]]}];
+const levels=[...baseLevels,...baseLevels.map(x=>({...x}))];
+const icons={up:"⬆️",down:"⬇️",left:"⬅️",right:"➡️"};
+const moves={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]};
+const el=id=>document.getElementById(id);
+const same=(a,b)=>a[0]===b[0]&&a[1]===b[1];
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+function shortestPath(lv){
+ const start=lv.start,seen=new Set([start.join(",")]),queue=[[...start,0]];
+ for(let head=0;head<queue.length;head++){
+  const [r,c,dist]=queue[head];
+  if(same([r,c],lv.goal))return dist;
+  for(const [dr,dc] of Object.values(moves)){
+   const nr=r+dr,nc=c+dc,key=`${nr},${nc}`;
+   if(nr<0||nc<0||nr>=lv.n||nc>=lv.n||seen.has(key)||lv.walls.some(w=>same(w,[nr,nc])))continue;
+   seen.add(key);queue.push([nr,nc,dist+1]);
+  }
+ }
+ return Infinity;
+}
+let stage=0,pos=[0,0],commands=[],history=[],running=false,finished=false,firstTrySuccess=false;
+let active=-1,error=-1,completed=0,attempt=1,totalMoved=0;
+let pendingStage=-1;
+function msg(t){el("message").textContent=t}
+function draw(){
+ const lv=levels[stage],speed=stage>=3,optimal=shortestPath(lv);
+ el("stage").textContent=`${speed?"⚡":"🌟"} ${stage+1} / 6 단계`;
+ el("dimensions").textContent=`${lv.n} × ${lv.n}`;
+ el("stageNotice").textContent=speed?`⚡ 가장 적은 화살표로! 🎯 ${optimal}칸 · 👣 ${totalMoved}칸`:"🎁 보물 찾기";
+ el("tryCount").textContent=`${attempt}차 시도`;
+ el("board").style.gridTemplateColumns=`repeat(${lv.n},minmax(0,1fr))`;
+ el("board").replaceChildren();
+ for(let r=0;r<lv.n;r++)for(let c=0;c<lv.n;c++){
+  const loc=[r,c],wall=lv.walls.some(w=>same(w,loc)),goal=same(lv.goal,loc),robot=same(pos,loc);
+  const cell=document.createElement("div");
+  cell.className="cell"+(wall?" wall":"")+(goal?" goal":"")+(robot?" robot":"");
+  cell.textContent=robot?"🤖":wall?"🌳":goal?"🎁":"";
+  cell.setAttribute("aria-label",robot?"로봇":wall?"나무":goal?"보물":"빈 칸");
+  el("board").append(cell);
+ }
+ const past=el("history");past.replaceChildren();
+ for(const row of history){
+  const div=document.createElement("div");div.className="past";
+  const heading=document.createElement("strong");heading.textContent=`${row.number}차 `;
+  div.append(heading);
+  for(let j=0;j<row.steps.length;j++){
+   const span=document.createElement("span");span.textContent=icons[row.steps[j]];
+   if(j===row.bad){
+     span.classList.add("bad-arrow");span.title="막힌 화살표";span.setAttribute("aria-label",`${j+1}번 막힌 화살표`);
+   }
+   div.append(span);
+  }
+  past.append(div);
+ }
+ const line=el("queue");line.replaceChildren();
+ if(!commands.length)line.textContent="👆 새 화살표를 골라요!";
+ commands.forEach((direction,i)=>{
+  const span=document.createElement("span");
+  span.className="step"+(i===error?" error":i===active?" current":i<completed?" done":"");
+  span.textContent=icons[direction];span.dataset.number=String(i+1);
+  span.setAttribute("aria-label",`${attempt}번째 시도 ${i+1}번 ${direction}${i===error?" 막힘":""}`);
+  line.append(span);
+ });
+ el("next").hidden=!firstTrySuccess||stage===5;
+ el("next").textContent=stage===2?"⚡ 빠른 길 도전!":stage===5?"🏆 모두 완료":"🎉 다음 단계";
+ document.querySelectorAll(".direction").forEach(b=>b.disabled=running||finished);
+ el("run").disabled=running||finished||commands.length===0;
+ el("clear").disabled=running||finished||commands.length===0;
+ el("restart").disabled=running;
+ el("next").disabled=running;
+}
+function reset(next=stage){
+ stage=next;pos=[...levels[stage].start];commands=[];history=[];
+ running=false;finished=false;firstTrySuccess=false;active=-1;error=-1;completed=0;attempt=1;totalMoved=0;
+ el("celebration").hidden=true;
+ msg("👆 길을 만들어요!");el("status").textContent="🧭 1차 시도";
+ el("feedback").textContent=stage>=3?"⚡ 가장 적은 화살표! 🎯 최소 칸 수로 한 번에 도착해요!":"🏅 한 번에 성공하면 다음 단계!";
+ draw();
+}
+function showCelebrate(title,description,nextStage,buttonText){
+ pendingStage=nextStage;
+ el("celebrateTitle").textContent=title;
+ el("celebrateDesc").textContent=description;
+ el("celebrateContinue").textContent=buttonText;
+ el("celebration").hidden=false;
+}
+function newAttempt(bad){
+ history.push({number:attempt,steps:[...commands],bad});
+ attempt++;commands=[];active=-1;error=-1;completed=0;
+}
+document.querySelectorAll(".direction").forEach(button=>button.addEventListener("click",()=>{
+ if(running||finished)return;
+ if(commands.length>=40){msg("🛑 40개까지!");return}
+ commands.push(button.dataset.direction);
+ error=-1;msg("👍 좋아요!");el("status").textContent=`👣 ${attempt}차 • ${commands.length}개`;draw();
+}));
+el("clear").addEventListener("click",()=>{
+ if(running||finished||!commands.length)return;
+ commands.pop();error=-1;active=-1;completed=0;
+ el("status").textContent="↩️ 1개 지웠어요";draw();
+});
+el("restart").addEventListener("click",()=>{if(!running)reset()});
+el("next").addEventListener("click",()=>{if(!running&&firstTrySuccess&&stage<5)reset(stage+1)});
+el("celebrateContinue").addEventListener("click",()=>reset(pendingStage>=0?pendingStage:0));
+el("run").addEventListener("click",async()=>{
+ if(running||finished||!commands.length)return;
+ running=true;active=-1;error=-1;completed=0;draw();
+ const lv=levels[stage];let outcome="short",bad=-1;
+ for(let i=0;i<commands.length;i++){
+  active=i;el("status").textContent=`▶️ ${attempt}차 • ${i+1}번 ${icons[commands[i]]}`;
+  draw();await delay(530);
+  const delta=moves[commands[i]],target=[pos[0]+delta[0],pos[1]+delta[1]];
+  if(target.some(x=>x<0||x>=lv.n)){outcome="edge";bad=i;break}
+  if(lv.walls.some(w=>same(w,target))){outcome="wall";bad=i;break}
+  pos=target;totalMoved++;completed=i+1;draw();await delay(220);
+  if(same(pos,lv.goal)){outcome="win";break}
+ }
+ running=false;active=-1;
+ if(outcome==="win"){
+  finished=true;
+  const fastEnough=stage<3||totalMoved===shortestPath(lv);
+  firstTrySuccess=attempt===1&&fastEnough;
+  msg("🎁 도착! 성공!");
+  if(firstTrySuccess){
+   el("status").textContent=stage>=3?`⚡ ${totalMoved}칸 최단 길!`:"🏅 1차 성공!";
+   el("feedback").textContent="✅ 다음 단계 열림! 🎉";
+   if(stage===2)showCelebrate("🏆 보물을 모두 찾았어요!","⚡ 새로운 목표! 4~6단계에서는 화살표를 가장 적게 써서 보물을 찾아요! 👣 적은 칸으로, 한 번에 도착해요! 🏆",3,"⚡ 빠른 길 도전! (4단계)");
+   if(stage===5)showCelebrate("🎉 6단계 모두 성공! 🎉","🏆 빠른 길로 모든 보물을 찾았어요!",0,"🔄 처음부터 놀기");
+  }else{
+   el("status").textContent=`🎁 ${attempt}차 도착!`;
+   el("feedback").textContent=stage>=3&&!fastEnough?
+    `🔒 ${totalMoved}칸 이동! 가장 빠른 길은 ${shortestPath(lv)}칸 · 🔄 다시 도전`:
+    "🔒 다음 단계는 1차 성공만! 🔄 처음부터";
+  }
+ }else{
+  error=bad;
+  if(outcome==="wall"||outcome==="edge"){
+   const num=bad+1;
+   msg(`${outcome==="wall"?"🌳 나무!":"🧱 벽!"} ❌ ${num}번`);
+   el("status").textContent=`❌ ${attempt}차 • ${num}번 ${icons[commands[bad]]}`;
+   el("feedback").textContent=`${num}️⃣ ${icons[commands[bad]]} ❌ → 👆 새 길`;
+  }else{
+   msg("🎁 아직 못 왔어요!");
+   el("status").textContent=`⚠️ ${attempt}차 • 화살표 부족`;
+   el("feedback").textContent=`${commands.length}️⃣ 개까지 이동 · ➕ 더 가요!`;
+  }
+  draw();await delay(900);
+  newAttempt(bad);
+  el("status").textContent=`👣 ${attempt}차 • 새 화살표`;
+  el("feedback").textContent="📍 이 자리에서 이어 가요! 🔒 다음 단계는 1차 성공";
+ }
+ draw();
+});
+reset();
+
+</script></body></html>
